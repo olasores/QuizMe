@@ -13,7 +13,6 @@ const Nav = () => {
   return (
     <nav className="relative bg-white shadow-md border-b border-black">
   <div className="flex items-center justify-between px-4 sm:px-6 py-4">
-        {/* Left: Brand with compact inline icon */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center group" aria-label="QuizMe Home">
             <span className="font-bold text-black text-lg sm:text-xl md:text-2xl leading-none">QuizMe</span>
@@ -35,9 +34,7 @@ const Nav = () => {
           </Link>
         </div>
 
-        {/* Right: Nav + Mobile Toggle */}
         <div className="flex items-center gap-4">
-          {/* Mobile Menu Button */}
           <button
             onClick={toggleMenu}
             className="md:hidden flex flex-col items-center justify-center w-8 h-8 space-y-1 focus:outline-none"
