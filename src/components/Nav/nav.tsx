@@ -12,7 +12,7 @@ const Nav = () => {
 
   return (
     <nav className="relative bg-white shadow-md border-b border-black">
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3">
+  <div className="flex items-center justify-between px-4 sm:px-6 py-4">
         {/* Left: Brand with compact inline icon */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center group" aria-label="QuizMe Home">
