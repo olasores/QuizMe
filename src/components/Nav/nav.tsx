@@ -50,21 +50,18 @@ const Nav = () => {
 
           {/* Desktop Navigation */}
           <ul className="hidden md:flex items-center gap-6 text-lg font-medium">
-          <li>
-            <Link href="/" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Home</Link>
-          </li>
-          <li>
-            <Link href="/about" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">About</Link>
-          </li>
-          <li>
-            <Link href="/faq" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">FAQ</Link>
-          </li>
-          <li>
-            <Link href="/login" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Log In</Link>
-          </li>
-          <li>
-            <Link href="/signup" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Sign Up</Link>
-          </li>
+            <li>
+              <Link href="#home" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Home</Link>
+            </li>
+            <li>
+              <Link href="#features" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Features</Link>
+            </li>
+            <li>
+              <Link href="/login" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Log In</Link>
+            </li>
+            <li>
+              <Link href="/signup" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Sign Up</Link>
+            </li>
           </ul>
         </div>
       </div>
@@ -73,8 +70,8 @@ const Nav = () => {
       <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
         <ul className="bg-white border-t border-gray-200 py-2">
           <li>
-            <Link 
-              href="/" 
+            <Link
+              href="#home"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
@@ -82,26 +79,17 @@ const Nav = () => {
             </Link>
           </li>
           <li>
-            <Link 
-              href="/about" 
+            <Link
+              href="#features"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              About
+              Features
             </Link>
           </li>
           <li>
-            <Link 
-              href="/faq" 
-              className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              FAQ
-            </Link>
-          </li>
-          <li>
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
@@ -109,8 +97,8 @@ const Nav = () => {
             </Link>
           </li>
           <li>
-            <Link 
-              href="/signup" 
+            <Link
+              href="/signup"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
