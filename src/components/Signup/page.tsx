@@ -1,11 +1,11 @@
 "use client"
 
-const Auth = () => {
+const Signup = () => {
     return (
         <div className="min-h-screen flex items-center justify-center">
             <div className="bg-white shadow-md">
                 <h2 className="text-2xl text-center">
-                    Login
+                    Signup
                 </h2>
 
                 <form className="flex flex-col">
@@ -24,19 +24,12 @@ const Auth = () => {
                         type="button"
                         className=""
                     >
-                        Login
+                        Signup
                     </button>
                 </form>
-
-                <p className="text-center">
-                    Register Here{" "}
-                    <span className="cursor-pointer">
-                        Sign Up
-                    </span>
-                </p>
             </div>
         </div>
     )
 }
 
-export default Auth;
+export default Signup;
