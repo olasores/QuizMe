@@ -1,5 +1,7 @@
 import Nav from "@/components/Nav/nav";
 import Hero from "@/components/Home/Hero";
+import AboutSection from "@/components/AboutSection";
+import FAQSection from "@/components/FAQSection";
 
 const Homepage = () => (
   <>
@@ -23,6 +25,8 @@ const Homepage = () => (
           <p className="text-gray-600 text-center">Enjoy interactive quizzes designed to make learning enjoyable and effective.</p>
         </div>
       </section>
+      <AboutSection />
+      <FAQSection />
     </main>
   </>
 );
