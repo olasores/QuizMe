@@ -1,5 +1,5 @@
 "use client";
-import { supabase } from "@/lib/supabase/client";
+import { getBrowserSupabase } from "@/lib/supabase/client";
 import { useState } from "react";
 
 interface GoogleButtonProps {
@@ -28,7 +28,8 @@ export function GoogleButton({
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+  const supabase = getBrowserSupabase();
+  const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}${redirectPath}`,
