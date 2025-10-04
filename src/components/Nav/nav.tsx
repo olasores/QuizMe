@@ -54,6 +54,9 @@ const Nav = () => {
               <Link href="#features" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Features</Link>
             </li>
             <li>
+              <Link href="#faq" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">FAQ</Link>
+            </li>
+            <li>
               <Link href="/Login" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Log In</Link>
             </li>
             <li>
@@ -82,6 +85,15 @@ const Nav = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Features
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="#faq"
+              className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              FAQ
             </Link>
           </li>
           <li>
