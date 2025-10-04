@@ -3,15 +3,34 @@
 import Link from "next/link";
 import { useState } from "react";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { getBrowserSupabase } from "@/lib/supabase/client";
 
 const Login = () => {
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+        const form = e.target as HTMLFormElement;
+        const email = (form.querySelector('#email') as HTMLInputElement).value;
+        const password = (form.querySelector('#password') as HTMLInputElement).value;
         setLoading(true);
-        // Simulate auth delay
-        setTimeout(() => setLoading(false), 1200);
+        try {
+            const supabase = getBrowserSupabase();
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            window.location.href = '/dashboard';
+        } catch (err: unknown) {
+            let msg = 'Login failed';
+            if (err && typeof err === 'object' && 'message' in err) {
+                const m = (err as { message?: unknown }).message;
+                if (typeof m === 'string') msg = m;
+            }
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -49,6 +68,7 @@ const Login = () => {
                         </label>
                         <button type="button" className="text-black underline underline-offset-4 decoration-black/40 hover:decoration-black transition text-xs sm:text-sm">Forgot password?</button>
                     </div>
+                    {error && <p className="text-xs text-red-600 -mt-1">{error}</p>}
                     <button
                         type="submit"
                         disabled={loading}
@@ -65,7 +85,7 @@ const Login = () => {
                                     <span className="text-xs tracking-wide text-gray-500">OR</span>
                                     <div className="h-px flex-1 bg-black/20" />
                                 </div>
-                                <GoogleButton label="Continue with Google" redirectPath="/" />
+                                <GoogleButton label="Continue with Google" redirectPath="/dashboard" />
                 <div className="relative mt-8 text-center text-sm text-gray-600">
                       <span>Don&apos;t have an account? </span>
                     <Link href="/Signup" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Sign Up</Link>

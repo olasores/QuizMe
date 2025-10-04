@@ -3,14 +3,54 @@
 import Link from "next/link";
 import { useState } from "react";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { getBrowserSupabase } from "@/lib/supabase/client";
 
 const Signup = () => {
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [info, setInfo] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+        setInfo(null);
+        const form = e.target as HTMLFormElement;
+        const name = (form.querySelector('#name') as HTMLInputElement).value.trim();
+        const email = (form.querySelector('#email') as HTMLInputElement).value.trim();
+        const password = (form.querySelector('#password') as HTMLInputElement).value;
+        const confirm = (form.querySelector('#confirmPassword') as HTMLInputElement).value;
+        if (password !== confirm) {
+            setError('Passwords do not match');
+            return;
+        }
         setLoading(true);
-        setTimeout(() => setLoading(false), 1400);
+        try {
+            const supabase = getBrowserSupabase();
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { full_name: name },
+                    emailRedirectTo: `${window.location.origin}/dashboard`
+                }
+            });
+            if (error) throw error;
+            // If email confirmation is ON in Supabase, user must verify; otherwise session exists.
+            if (data.user && !data.session) {
+                setInfo('Check your email to confirm your account, then return – you will be redirected after confirmation.');
+            } else {
+                window.location.href = '/dashboard';
+            }
+        } catch (err: unknown) {
+            let msg = 'Signup failed';
+            if (err && typeof err === 'object' && 'message' in err) {
+                const m = (err as { message?: unknown }).message;
+                if (typeof m === 'string') msg = m;
+            }
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -65,6 +105,8 @@ const Signup = () => {
                         <input type="checkbox" id="terms" className="accent-black mt-1" required />
                         <label htmlFor="terms" className="text-gray-600 leading-snug">I agree to the <span className="underline decoration-black/40">Terms</span> & <span className="underline decoration-black/40">Privacy Policy</span>.</label>
                     </div>
+                    {error && <p className="text-xs text-red-600 -mt-1">{error}</p>}
+                    {info && !error && <p className="text-xs text-blue-600 -mt-1">{info}</p>}
                     <button
                         type="submit"
                         disabled={loading}
@@ -82,7 +124,7 @@ const Signup = () => {
                             <div className="h-px flex-1 bg-black/20" />
                             <div className="h-px flex-1 bg-black/20" />
                         </div>
-                        <GoogleButton label="Sign up with Google" redirectPath="/" />
+                        <GoogleButton label="Sign up with Google" redirectPath="/dashboard" />
                 <div className="relative mt-8 text-center text-sm text-gray-600">
                     <span>Already have an account? </span>
                     <Link href="/Login" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Log In</Link>

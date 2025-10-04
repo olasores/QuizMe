@@ -31,5 +31,4 @@ export function getBrowserSupabase(): SupabaseClient {
   return browserClient;
 }
 
-// (Optional) legacy default export compatibility if previously imported as `supabase`
-export const supabase = getBrowserSupabase();
+// Do not export a pre-initialized client; always call getBrowserSupabase() inside client components.
