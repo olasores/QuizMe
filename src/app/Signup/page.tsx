@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 
 const Signup = () => {
     const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ const Signup = () => {
                 <h1 className="relative text-3xl font-extrabold text-black mb-2 tracking-tight text-center">Create Account</h1>
                 <p className="relative text-center text-gray-600 mb-8 text-sm">Start your learning journey today.</p>
 
-                <form onSubmit={handleSubmit} className="relative flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="relative flex flex-col gap-5">
                     <div className="flex flex-col gap-1">
                         <label htmlFor="name" className="text-sm font-medium text-black">Full Name</label>
                         <input
@@ -74,7 +75,14 @@ const Signup = () => {
                             {loading ? 'Creating account...' : 'Sign Up'}
                         </span>
                     </button>
-                </form>
+                        </form>
+                        <div className="relative my-6 flex items-center gap-4">
+                            <div className="h-px flex-1 bg-black/20" />
+                            <span className="text-xs tracking-wide text-gray-500">OR</span>
+                            <div className="h-px flex-1 bg-black/20" />
+                            <div className="h-px flex-1 bg-black/20" />
+                        </div>
+                        <GoogleButton label="Sign up with Google" redirectPath="/" />
                 <div className="relative mt-8 text-center text-sm text-gray-600">
                     <span>Already have an account? </span>
                     <Link href="/Login" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Log In</Link>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 
 const Login = () => {
     const [loading, setLoading] = useState(false);
@@ -58,7 +59,13 @@ const Login = () => {
                             {loading ? 'Signing in...' : 'Log In'}
                         </span>
                     </button>
-                </form>
+                                </form>
+                                <div className="relative my-6 flex items-center gap-4">
+                                    <div className="h-px flex-1 bg-black/20" />
+                                    <span className="text-xs tracking-wide text-gray-500">OR</span>
+                                    <div className="h-px flex-1 bg-black/20" />
+                                </div>
+                                <GoogleButton label="Continue with Google" redirectPath="/" />
                 <div className="relative mt-8 text-center text-sm text-gray-600">
                       <span>Don&apos;t have an account? </span>
                     <Link href="/Signup" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Sign Up</Link>
