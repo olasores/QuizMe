@@ -1,4 +1,6 @@
 "use client";
+import Link from 'next/link';
+
 export function QuizLauncher() {
   return (
     <div className="rounded-xl border border-neutral-800/80 bg-black text-white p-5 shadow-sm flex flex-col gap-4 relative overflow-hidden">
@@ -9,9 +11,9 @@ export function QuizLauncher() {
       </div>
       
       <div className="relative">
-        <button className="inline-flex items-center gap-2 rounded-lg bg-white text-black text-sm font-medium px-4 py-2 shadow hover:shadow-md transition">
+        <Link href="/generate-quiz" className="inline-flex items-center gap-2 rounded-lg bg-white text-black text-sm font-medium px-4 py-2 shadow hover:shadow-md transition">
           <span>Generate Quiz</span>
-        </button>
+        </Link>
       </div>
     </div>
   );
