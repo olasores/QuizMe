@@ -60,10 +60,10 @@ const Signup = () => {
     };
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center py-2">
-            <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-lg">
+        <div className="flex min-h-screen flex-col items-center justify-center py-2 bg-white">
+            <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl border border-gray-200">
                 <div>
-                    <h1 className="text-center text-3xl font-bold">Sign Up</h1>
+                    <h1 className="text-center text-3xl font-bold text-black">Sign Up</h1>
                 </div>
                 
                 {error && (
@@ -79,30 +79,62 @@ const Signup = () => {
                 )}
                 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-4 rounded-md shadow-sm">
+                    <div className="space-y-5 rounded-md">
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
-                            <input id="name" name="name" type="text" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500" />
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input 
+                                id="name" 
+                                name="name" 
+                                type="text" 
+                                required 
+                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
+                                placeholder="Enter your full name"
+                            />
                         </div>
                         
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
-                            <input id="email" name="email" type="email" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500" />
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                            <input 
+                                id="email" 
+                                name="email" 
+                                type="email" 
+                                required 
+                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
+                                placeholder="Enter your email"
+                            />
                         </div>
                         
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                            <input id="password" name="password" type="password" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500" />
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input 
+                                id="password" 
+                                name="password" 
+                                type="password" 
+                                required 
+                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
+                                placeholder="Create a password"
+                            />
                         </div>
                         
                         <div>
-                            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">Confirm Password</label>
-                            <input id="confirm-password" name="confirm" type="password" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500" />
+                            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                            <input 
+                                id="confirm-password" 
+                                name="confirm" 
+                                type="password" 
+                                required 
+                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
+                                placeholder="Confirm your password"
+                            />
                         </div>
                     </div>
                     
-                    <div>
-                        <button type="submit" disabled={loading} className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50">
+                    <div className="mt-6">
+                        <button 
+                            type="submit" 
+                            disabled={loading} 
+                            className="group relative flex w-full justify-center rounded-md border border-transparent bg-black px-4 py-3 text-base font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+                        >
                             {loading ? 'Loading...' : 'Sign up'}
                         </button>
                     </div>
@@ -114,7 +146,7 @@ const Signup = () => {
                             <div className="w-full border-t border-gray-300" />
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                            <span className="bg-white px-4 text-gray-600 font-medium">Or continue with</span>
                         </div>
                     </div>
                     
@@ -125,7 +157,7 @@ const Signup = () => {
                 
                 <div className="mt-6 text-center text-sm">
                     <span>Already have an account? </span>
-                    <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+                    <Link href="/Login" className="font-medium text-black hover:text-gray-700">
                         Log in
                     </Link>
                 </div>
