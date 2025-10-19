@@ -57,10 +57,10 @@ const Nav = () => {
               <Link href="#faq" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">FAQ</Link>
             </li>
             <li>
-              <Link href="/Login" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Log In</Link>
+              <Link href="/login" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Log In</Link>
             </li>
             <li>
-              <Link href="/Signup" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Sign Up</Link>
+              <Link href="/signup" className="text-black hover:text-white hover:bg-black px-3 py-1 rounded transition-colors">Sign Up</Link>
             </li>
           </ul>
         </div>
@@ -98,7 +98,7 @@ const Nav = () => {
           </li>
           <li>
             <Link
-              href="/Login"
+              href="/login"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
@@ -107,7 +107,7 @@ const Nav = () => {
           </li>
           <li>
             <Link
-              href="/Signup"
+              href="/signup"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
