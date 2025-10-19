@@ -21,8 +21,8 @@ export function TopBar({ userEmail, onSignOut }: TopBarProps) {
         </div>
       ) : (
         <div className="flex items-center gap-3 text-xs font-medium">
-          <Link href="/Login" className="underline">Login</Link>
-          <Link href="/Signup" className="underline">Signup</Link>
+          <Link href="/login" className="underline">Login</Link>
+          <Link href="/signup" className="underline">Signup</Link>
         </div>
       )}
       {menuOpen && (
