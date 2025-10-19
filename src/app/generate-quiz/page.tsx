@@ -21,32 +21,68 @@ export default function GenerateQuizPage() {
     setError(null);
 
     try {
-      let content = '';
-
       if (mode === 'Text') {
-        content = textContent;
-      } else {
-        // For now, we'll handle only text mode
-        // File parsing would need additional implementation
-        setError('Document upload coming soon! Please use text mode.');
-        setLoading(false);
+        // Text flow -> call Claude-backed endpoint
+        const content = textContent;
+        const response = await fetch('/api/generate-quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, numQuestions: 10 }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate quiz');
+        }
+
+        const quizData = encodeURIComponent(JSON.stringify(data.quiz));
+        router.push(`/quiz?data=${quizData}`);
         return;
       }
 
-      const response = await fetch('/api/generate-quiz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, numQuestions: 10 }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate quiz');
+      // Document flow -> upload file to parsing endpoint, then normalize to quiz shape
+      if (!selectedFile) {
+        setError('Please select a document to upload.');
+        return;
       }
 
-      // Redirect to quiz page with quiz data
-      const quizData = encodeURIComponent(JSON.stringify(data.quiz));
+      const lower = selectedFile.name.toLowerCase();
+      if (lower.endsWith('.doc')) {
+        setError('Unsupported .doc file. Please upload PDF, DOCX, or TXT.');
+        return;
+      }
+
+      // Build form data and call the document parsing endpoint
+      const form = new FormData();
+      form.append('file', selectedFile);
+
+      const res = await fetch('/api/quiz-from-doc', { method: 'POST', body: form });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Failed to parse document');
+      }
+
+      type DocQuestion = { question: string; options: string[]; answerIndex: number };
+      type DocQuizResponse = { textPreview: string; questions: DocQuestion[] };
+      const parsed: DocQuizResponse = await res.json();
+
+      // Normalize to the quiz shape used by /quiz page
+      const normalized = {
+        questions: (parsed.questions || []).map((q) => {
+          const opts = (q.options || []).slice(0, 4);
+          const letters = ['A', 'B', 'C', 'D'] as const;
+          const options = opts.map((text, i) => ({ id: letters[i] || String(i + 1), text }));
+          const idx = Math.max(0, Math.min(q.answerIndex ?? 0, options.length - 1));
+          const correctAnswer = options[idx]?.id || 'A';
+          return { question: q.question, options, correctAnswer };
+        }),
+      };
+
+      if (!normalized.questions.length) {
+        throw new Error('No questions could be generated from the document.');
+      }
+
+      const quizData = encodeURIComponent(JSON.stringify(normalized));
       router.push(`/quiz?data=${quizData}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate quiz');

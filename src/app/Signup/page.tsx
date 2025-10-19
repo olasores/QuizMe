@@ -127,7 +127,7 @@ const Signup = () => {
                         <GoogleButton label="Sign up with Google" redirectPath="/dashboard" />
                 <div className="relative mt-8 text-center text-sm text-gray-600">
                     <span>Already have an account? </span>
-                    <Link href="/Login" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Log In</Link>
+                    <Link href="/login" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Log In</Link>
                 </div>
             </div>
         </div>
