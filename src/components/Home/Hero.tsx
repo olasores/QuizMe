@@ -19,7 +19,7 @@ const Hero = () => {
                 </p>
 
                 <div className="flex justify-center">
-                    <a href="/signup" className="bg-black hover:bg-gray-800 text-white font-bold py-4 px-12 rounded-xl shadow-lg transition-all text-xl tracking-wider transform hover:scale-[1.02] border border-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
+                    <a href="/Signup" className="bg-black hover:bg-gray-800 text-white font-bold py-4 px-12 rounded-xl shadow-lg transition-all text-xl tracking-wider transform hover:scale-[1.02] border border-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
                         Get Started
                     </a>
                 </div>
