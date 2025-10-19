@@ -98,7 +98,7 @@ const Nav = () => {
           </li>
           <li>
             <Link
-              href="/login"
+              href="/Login"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
@@ -107,7 +107,7 @@ const Nav = () => {
           </li>
           <li>
             <Link
-              href="/signup"
+              href="/Signup"
               className="block text-black hover:bg-gray-100 px-6 py-3 text-lg font-medium transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
