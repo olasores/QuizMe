@@ -14,39 +14,33 @@ const Signup = () => {
         e.preventDefault();
         setError(null);
         setInfo(null);
-        
         const form = e.target as HTMLFormElement;
-        const name = (form.querySelector('#name') as HTMLInputElement).value;
-        const email = (form.querySelector('#email') as HTMLInputElement).value;
+        const name = (form.querySelector('#name') as HTMLInputElement).value.trim();
+        const email = (form.querySelector('#email') as HTMLInputElement).value.trim();
         const password = (form.querySelector('#password') as HTMLInputElement).value;
-        const confirm = (form.querySelector('#confirm-password') as HTMLInputElement).value;
-
-        if (!name || !email || !password || !confirm) {
-            setError('Please fill in all fields');
-            return;
-        }
-
+        const confirm = (form.querySelector('#confirmPassword') as HTMLInputElement).value;
         if (password !== confirm) {
             setError('Passwords do not match');
             return;
         }
-
         setLoading(true);
-
         try {
             const supabase = getBrowserSupabase();
-            const { error } = await supabase.auth.signUp({
+            const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: {
-                        full_name: name
-                    }
+                    data: { full_name: name },
+                    emailRedirectTo: `${window.location.origin}/dashboard`
                 }
             });
-
             if (error) throw error;
-            setInfo('Check your email for the confirmation link.');
+            // If email confirmation is ON in Supabase, user must verify; otherwise session exists.
+            if (data.user && !data.session) {
+                setInfo('Check your email to confirm your account, then return – you will be redirected after confirmation.');
+            } else {
+                window.location.href = '/dashboard';
+            }
         } catch (err: unknown) {
             let msg = 'Signup failed';
             if (err && typeof err === 'object' && 'message' in err) {
@@ -60,106 +54,80 @@ const Signup = () => {
     };
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center py-2 bg-white">
-            <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl border border-gray-200">
-                <div>
-                    <h1 className="text-center text-3xl font-bold text-black">Sign Up</h1>
-                </div>
-                
-                {error && (
-                    <div className="rounded-md bg-red-50 p-4">
-                        <div className="text-sm text-red-700">{error}</div>
+        <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-white via-gray-100 to-gray-300 px-4 py-10">
+            <div className="w-full max-w-md bg-white border border-black rounded-3xl shadow-xl p-8 sm:p-10 relative overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)] [background-size:12px_12px]"></div>
+                <h1 className="relative text-3xl font-extrabold text-black mb-2 tracking-tight text-center">Create Account</h1>
+                <p className="relative text-center text-gray-600 mb-8 text-sm">Start your learning journey today.</p>
+
+            <form onSubmit={handleSubmit} className="relative flex flex-col gap-5">
+                    <div className="flex flex-col gap-1">
+                        <label htmlFor="name" className="text-sm font-medium text-black">Full Name</label>
+                        <input
+                            id="name"
+                            type="text"
+                            placeholder="Jane Doe"
+                            required
+                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                        />
                     </div>
-                )}
-                
-                {info && (
-                    <div className="rounded-md bg-blue-50 p-4">
-                        <div className="text-sm text-blue-700">{info}</div>
+                    <div className="flex flex-col gap-1">
+                        <label htmlFor="email" className="text-sm font-medium text-black">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            required
+                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                        />
                     </div>
-                )}
-                
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-5 rounded-md">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                            <input 
-                                id="name" 
-                                name="name" 
-                                type="text" 
-                                required 
-                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
-                                placeholder="Enter your full name"
-                            />
-                        </div>
-                        
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-                            <input 
-                                id="email" 
-                                name="email" 
-                                type="email" 
-                                required 
-                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
-                                placeholder="Enter your email"
-                            />
-                        </div>
-                        
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input 
-                                id="password" 
-                                name="password" 
-                                type="password" 
-                                required 
-                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
-                                placeholder="Create a password"
-                            />
-                        </div>
-                        
-                        <div>
-                            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                            <input 
-                                id="confirm-password" 
-                                name="confirm" 
-                                type="password" 
-                                required 
-                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
-                                placeholder="Confirm your password"
-                            />
-                        </div>
+                    <div className="flex flex-col gap-1">
+                        <label htmlFor="password" className="text-sm font-medium text-black">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            placeholder="••••••••"
+                            required
+                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                        />
                     </div>
-                    
-                    <div className="mt-6">
-                        <button 
-                            type="submit" 
-                            disabled={loading} 
-                            className="group relative flex w-full justify-center rounded-md border border-transparent bg-black px-4 py-3 text-base font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 disabled:opacity-50 transition-colors"
-                        >
-                            {loading ? 'Loading...' : 'Sign up'}
-                        </button>
+                    <div className="flex flex-col gap-1">
+                        <label htmlFor="confirmPassword" className="text-sm font-medium text-black">Confirm Password</label>
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            required
+                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                        />
                     </div>
-                </form>
-                
-                <div className="mt-6">
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300" />
+                    <div className="flex items-start gap-2 text-xs sm:text-sm">
+                        <input type="checkbox" id="terms" className="accent-black mt-1" required />
+                        <label htmlFor="terms" className="text-gray-600 leading-snug">I agree to the <span className="underline decoration-black/40">Terms</span> & <span className="underline decoration-black/40">Privacy Policy</span>.</label>
+                    </div>
+                    {error && <p className="text-xs text-red-600 -mt-1">{error}</p>}
+                    {info && !error && <p className="text-xs text-blue-600 -mt-1">{info}</p>}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="group relative bg-black text-white font-semibold py-3 rounded-xl shadow hover:bg-gray-900 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        <span className="inline-flex items-center justify-center gap-2">
+                            {loading && <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                            {loading ? 'Creating account...' : 'Sign Up'}
+                        </span>
+                    </button>
+                        </form>
+                        <div className="relative my-6 flex items-center gap-4">
+                            <div className="h-px flex-1 bg-black/20" />
+                            <span className="text-xs tracking-wide text-gray-500">OR</span>
+                            <div className="h-px flex-1 bg-black/20" />
+                            <div className="h-px flex-1 bg-black/20" />
                         </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="bg-white px-4 text-gray-600 font-medium">Or continue with</span>
-                        </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                        <GoogleButton />
-                    </div>
-                </div>
-                
-                <div className="mt-6 text-center text-sm">
+                        <GoogleButton label="Sign up with Google" redirectPath="/dashboard" />
+                <div className="relative mt-8 text-center text-sm text-gray-600">
                     <span>Already have an account? </span>
-                    <Link href="/Login" className="font-medium text-black hover:text-gray-700">
-                        Log in
-                    </Link>
+                    <Link href="/Login" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Log In</Link>
                 </div>
             </div>
         </div>

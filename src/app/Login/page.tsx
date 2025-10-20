@@ -12,25 +12,13 @@ const Login = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        
         const form = e.target as HTMLFormElement;
         const email = (form.querySelector('#email') as HTMLInputElement).value;
         const password = (form.querySelector('#password') as HTMLInputElement).value;
-        
-        if (!email || !password) {
-            setError('Please fill in all fields');
-            return;
-        }
-        
         setLoading(true);
-        
         try {
             const supabase = getBrowserSupabase();
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-            
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
             window.location.href = '/dashboard';
         } catch (err: unknown) {
@@ -46,76 +34,61 @@ const Login = () => {
     };
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center py-2 bg-white">
-            <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl border border-gray-200">
-                <div>
-                    <h1 className="text-center text-3xl font-bold text-black">Login</h1>
-                </div>
-                
-                {error && (
-                    <div className="rounded-md bg-red-50 p-4">
-                        <div className="text-sm text-red-700">{error}</div>
+        <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-white via-gray-100 to-gray-300 px-4 py-10">
+            <div className="w-full max-w-md bg-white border border-black rounded-3xl shadow-xl p-8 sm:p-10 relative overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)] [background-size:12px_12px]"></div>
+                <h1 className="relative text-3xl font-extrabold text-black mb-2 tracking-tight text-center">Log In</h1>
+                <p className="relative text-center text-gray-600 mb-8 text-sm">Welcome back. Enter your details below.</p>
+
+                <form onSubmit={handleSubmit} className="relative flex flex-col gap-5">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-black" htmlFor="email">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            required
+                            placeholder="you@example.com"
+                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                        />
                     </div>
-                )}
-                
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-5 rounded-md">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-                            <input 
-                                id="email" 
-                                name="email" 
-                                type="email" 
-                                required 
-                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
-                                placeholder="Enter your email"
-                            />
-                        </div>
-                        
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input 
-                                id="password" 
-                                name="password" 
-                                type="password" 
-                                required 
-                                className="block w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 shadow-sm focus:border-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 transition-all" 
-                                placeholder="Enter your password"
-                            />
-                        </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-black" htmlFor="password">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            required
+                            placeholder="••••••••"
+                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                        />
                     </div>
-                    
-                    <div className="mt-6">
-                        <button 
-                            type="submit" 
-                            disabled={loading} 
-                            className="group relative flex w-full justify-center rounded-md border border-transparent bg-black px-4 py-3 text-base font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 disabled:opacity-50 transition-colors"
-                        >
-                            {loading ? 'Loading...' : 'Log in'}
-                        </button>
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                        <label className="inline-flex items-center gap-2 select-none cursor-pointer">
+                            <input type="checkbox" className="accent-black w-4 h-4" />
+                            <span className="text-gray-600">Remember me</span>
+                        </label>
+                        <button type="button" className="text-black underline underline-offset-4 decoration-black/40 hover:decoration-black transition text-xs sm:text-sm">Forgot password?</button>
                     </div>
-                </form>
-                
-                <div className="mt-8">
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-200" />
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="bg-white px-4 text-gray-600 font-medium">Or continue with</span>
-                        </div>
-                    </div>
-                    
-                    <div className="mt-6 flex justify-center">
-                        <GoogleButton />
-                    </div>
-                </div>
-                
-                                <div className="mt-6 text-center text-sm">
-                    <span>Don&apos;t have an account? </span>
-                    <Link href="/Signup" className="font-medium text-black hover:text-gray-700">
-                        Sign up
-                    </Link>
+                    {error && <p className="text-xs text-red-600 -mt-1">{error}</p>}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="group relative bg-black text-white font-semibold py-3 rounded-xl shadow hover:bg-gray-900 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        <span className="inline-flex items-center justify-center gap-2">
+                            {loading && <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                            {loading ? 'Signing in...' : 'Log In'}
+                        </span>
+                    </button>
+                                </form>
+                                <div className="relative my-6 flex items-center gap-4">
+                                    <div className="h-px flex-1 bg-black/20" />
+                                    <span className="text-xs tracking-wide text-gray-500">OR</span>
+                                    <div className="h-px flex-1 bg-black/20" />
+                                </div>
+                                <GoogleButton label="Continue with Google" redirectPath="/dashboard" />
+                <div className="relative mt-8 text-center text-sm text-gray-600">
+                      <span>Don&apos;t have an account? </span>
+                    <Link href="/Signup" className="font-semibold text-black underline underline-offset-4 decoration-black/40 hover:decoration-black">Sign Up</Link>
                 </div>
             </div>
         </div>
