@@ -1,11 +1,32 @@
+"use client";
+import { useState, useEffect } from 'react';
+import { getBrowserSupabase } from '@/lib/supabase/client';
+import { QuizAnswer } from '@/types/database';
+
 interface QuizResultsProps {
   score: number;
   total: number;
   onRetry?: () => void;
   onExit?: () => void;
+  quizId?: string;
+  answers?: Record<number, string>;
+  questions?: Array<{
+    id: string;
+    correctAnswer: string;
+  }>;
 }
 
-export function QuizResults({ score, total, onRetry, onExit }: QuizResultsProps) {
+export function QuizResults({ 
+  score, 
+  total, 
+  onRetry, 
+  onExit,
+  quizId,
+  answers = {},
+  questions = []
+}: QuizResultsProps) {
+  const [, setIsSaving] = useState(false); // Setter used in functions below
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const percentage = Math.round((score / total) * 100);
   
   const getGrade = () => {
@@ -17,6 +38,66 @@ export function QuizResults({ score, total, onRetry, onExit }: QuizResultsProps)
   };
 
   const grade = getGrade();
+  
+  // Save quiz result to database
+  useEffect(() => {
+    const saveResult = async () => {
+      if (!quizId || saveStatus !== 'idle') return;
+      
+      try {
+        setIsSaving(true);
+        setSaveStatus('saving');
+        
+        const supabase = getBrowserSupabase();
+        
+        // Get user if logged in
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // Format answers for database
+        const formattedAnswers = Object.entries(answers).map(([index, selectedAnswer]) => {
+          const questionIndex = parseInt(index);
+          const question = questions[questionIndex];
+          
+          if (!question) return null;
+          
+          return {
+            question_id: question.id,
+            selected_option_id: selectedAnswer,
+            is_correct: selectedAnswer === question.correctAnswer
+          };
+        }).filter(Boolean) as QuizAnswer[];
+        
+        // Save attempt to database
+        const response = await fetch('/api/save-quiz-attempt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quiz_id: quizId,
+            user_id: user?.id,
+            completed_at: new Date().toISOString(),
+            score,
+            max_score: total,
+            answers: formattedAnswers
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to save quiz attempt');
+        }
+        
+        setSaveStatus('success');
+      } catch (error) {
+        console.error('Error saving quiz result:', error);
+        setSaveStatus('error');
+      } finally {
+        setIsSaving(false);
+      }
+    };
+    
+    if (quizId) {
+      saveResult();
+    }
+  }, [quizId, answers, questions, score, total, saveStatus]);
 
   return (
     <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
@@ -46,6 +127,25 @@ export function QuizResults({ score, total, onRetry, onExit }: QuizResultsProps)
           </div>
         </div>
 
+        {saveStatus === 'saving' && (
+          <div className="mb-4 text-sm text-blue-600 flex items-center justify-center gap-2">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            Saving your results...
+          </div>
+        )}
+        
+        {saveStatus === 'success' && (
+          <div className="mb-4 text-sm text-green-600">
+            Results saved successfully!
+          </div>
+        )}
+        
+        {saveStatus === 'error' && (
+          <div className="mb-4 text-sm text-red-600">
+            Failed to save results. Your progress wasn&apos;t recorded.
+          </div>
+        )}
+        
         <div className="flex gap-3">
           {onRetry && (
             <button

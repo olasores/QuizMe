@@ -103,12 +103,21 @@ function QuizContent() {
   }
 
   if (isComplete) {
+    // Extract quiz ID if available in the URL or generate temporary one
+    const quizId = searchParams.get('id') || `temp-${Date.now()}`;
+    
     return (
       <QuizResults
         score={calculateScore()}
         total={questions.length}
         onRetry={handleRetry}
         onExit={handleExit}
+        quizId={quizId}
+        answers={answers}
+        questions={questions.map((q, index) => ({
+          id: q.id || `q-${index}`,
+          correctAnswer: q.correctAnswer
+        }))}
       />
     );
   }

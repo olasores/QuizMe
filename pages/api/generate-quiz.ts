@@ -39,7 +39,6 @@ function truncate(s: string, n: number) {
   return s.slice(0, n).replace(/\s+\S*$/, '') + '…';
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function shuffle<T>(arr: T[]) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = (Math.random() * (i + 1)) | 0;
@@ -48,7 +47,6 @@ function shuffle<T>(arr: T[]) {
   return arr;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function pickMany<T>(arr: T[], n: number, avoid?: T): T[] {
   const pool = avoid ? arr.filter((x) => x !== avoid) : arr.slice();
   const out: T[] = [];

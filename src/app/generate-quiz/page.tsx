@@ -1,10 +1,35 @@
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getBrowserSupabase } from '@/lib/supabase/client';
 import { ToggleSwitch } from '@/components/generate/ToggleSwitch';
 import { TextInputArea } from '@/components/generate/TextInputArea';
 import { FileUpload } from '@/components/generate/FileUpload';
 import { GenerateButton } from '@/components/generate/GenerateButton';
+
+/**
+ * Helper function to detect a topic from the text content
+ */
+function detectTopic(text: string): string {
+  const topics = [
+    'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js',
+    'HTML', 'CSS', 'Python', 'Java', 'C#', 'Go', 'Rust',
+    'Machine Learning', 'AI', 'Data Science', 'Databases',
+    'Frontend', 'Backend', 'DevOps', 'Security',
+    'Computer Science', 'Programming', 'Web Development'
+  ];
+  
+  // Find the first topic that appears in the text
+  const lowerText = text.toLowerCase();
+  for (const topic of topics) {
+    if (lowerText.includes(topic.toLowerCase())) {
+      return topic;
+    }
+  }
+  
+  // Default topic if none is found
+  return 'General Knowledge';
+}
 
 type Mode = 'Document' | 'Text';
 
@@ -34,9 +59,34 @@ export default function GenerateQuizPage() {
         if (!response.ok) {
           throw new Error(data.error || 'Failed to generate quiz');
         }
-
+        
+        // Save the generated quiz to database
+        const { data: userData } = await getBrowserSupabase().auth.getUser();
+        const userId = userData?.user?.id;
+        
+        // Prepare quiz data for saving
+        const quizTitle = `Quiz on ${textContent.slice(0, 30)}...`;
+        const saveResponse = await fetch('/api/save-quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quiz: {
+              title: quizTitle,
+              description: `Generated from text content: ${textContent.slice(0, 100)}...`,
+              user_id: userId,
+              topic: detectTopic(textContent),
+              source_type: 'text',
+              source_name: 'Manual text input'
+            },
+            questions: data.quiz.questions
+          })
+        });
+        
+        const savedQuizData = await saveResponse.json();
+        const quizId = savedQuizData.id;
+        
         const quizData = encodeURIComponent(JSON.stringify(data.quiz));
-        router.push(`/quiz?data=${quizData}`);
+        router.push(`/quiz?data=${quizData}&id=${quizId}`);
         return;
       }
 
@@ -81,9 +131,34 @@ export default function GenerateQuizPage() {
       if (!normalized.questions.length) {
         throw new Error('No questions could be generated from the document.');
       }
-
+      
+      // Save the generated quiz to database
+      const { data: userData } = await getBrowserSupabase().auth.getUser();
+      const userId = userData?.user?.id;
+      
+      // Prepare quiz data for saving
+      const quizTitle = `Quiz on ${selectedFile.name}`;
+      const saveResponse = await fetch('/api/save-quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quiz: {
+            title: quizTitle,
+            description: `Generated from document: ${selectedFile.name}`,
+            user_id: userId,
+            topic: parsed.textPreview ? detectTopic(parsed.textPreview) : 'Document',
+            source_type: 'document',
+            source_name: selectedFile.name
+          },
+          questions: normalized.questions
+        })
+      });
+      
+      const savedQuizData = await saveResponse.json();
+      const quizId = savedQuizData.id;
+      
       const quizData = encodeURIComponent(JSON.stringify(normalized));
-      router.push(`/quiz?data=${quizData}`);
+      router.push(`/quiz?data=${quizData}&id=${quizId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate quiz');
     } finally {
