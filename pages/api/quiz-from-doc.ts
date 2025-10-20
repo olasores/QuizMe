@@ -185,26 +185,74 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let text = '';
     if (name.endsWith('.pdf')) {
       try {
-        // We've found that with version 1.1.1, pdf-parse is a function to call directly
-        console.log('Importing pdf-parse...');
+        // Try a more reliable approach with pdf-lib
+        console.log('Using pdf-lib for PDF parsing...');
+        const { PDFDocument } = require('pdf-lib');
+        
+        // Parse the PDF
+        const pdfDoc = await PDFDocument.load(buf.buffer);
+        const numberOfPages = pdfDoc.getPageCount();
+        
+        // Fallback to pdf-parse only if needed
+        console.log(`PDF has ${numberOfPages} pages`);
+        
+        // We'll use a more direct extraction approach
         const pdfParse = require('pdf-parse');
+        let extractedText = '';
         
-        // Log the type to confirm it's a function
-        console.log('PDF parse type:', typeof pdfParse);
-        
-        if (typeof pdfParse !== 'function') {
-          throw new Error(`pdf-parse module is not a function, it's a ${typeof pdfParse}`);
+        // Process page by page to avoid corruption issues
+        for (let i = 0; i < Math.min(numberOfPages, 50); i++) {
+          try {
+            // Create a new document with just this page
+            const singlePageDoc = await PDFDocument.create();
+            const [copiedPage] = await singlePageDoc.copyPages(pdfDoc, [i]);
+            singlePageDoc.addPage(copiedPage);
+            
+            // Convert to buffer
+            const pageBuffer = Buffer.from(await singlePageDoc.save());
+            
+            // Parse this page
+            const pageData = await pdfParse(pageBuffer);
+            extractedText += pageData.text + '\n\n';
+          } catch (pageError) {
+            console.warn(`Error extracting page ${i}, skipping: ${pageError.message}`);
+            // Continue to next page even if this one fails
+          }
         }
         
-        // Call the function directly
-        console.log('Calling pdf-parse directly...');
-        const data = await pdfParse(buf);
-        text = data.text || '';
+        text = extractedText.trim();
+        
+        if (!text) {
+          throw new Error('No text content could be extracted from the PDF');
+        }
         
         console.log('PDF parsing successful, text length:', text.length);
       } catch (error) {
         console.error('PDF parse error detail:', error);
-        throw new Error(`Failed to parse PDF: ${error instanceof Error ? error.message : String(error)}`);
+        
+        // Try pdf-parse one last time with minimal options
+        try {
+          console.log('Trying one more approach with pdf-parse...');
+          const pdfParse = require('pdf-parse');
+          const data = await pdfParse(buf, { max: 50 });
+          text = data.text || '';
+          
+          if (text.trim()) {
+            console.log('Alternate PDF parsing successful, text length:', text.length);
+          } else {
+            return res.status(422).json({ 
+              error: 'Unable to extract text from this PDF file',
+              suggestion: 'Please try a different PDF file or convert to text/docx format'
+            });
+          }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (fallbackError) {
+          return res.status(422).json({ 
+            error: 'Unable to parse this PDF file',
+            details: error instanceof Error ? error.message : String(error),
+            suggestion: 'Try saving your PDF with a different tool or convert it to text/docx format'
+          });
+        }
       }
     } else if (name.endsWith('.docx')) {
       const mammoth = (await import('mammoth')) as unknown as { 
@@ -220,9 +268,80 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const clean = normalize(text);
     if (!clean) return res.status(422).send('No extractable text found in the document.');
-    const questions = buildVariedQuestions(clean, 6, 10);
-    const preview = truncate(clean, 800);
-    return res.status(200).json({ textPreview: preview, questions });
+    
+    try {
+      // Use Anthropic Claude to generate quiz
+      console.log('Using Claude to generate quiz...');
+      const { default: Anthropic } = await import('@anthropic-ai/sdk');
+      
+      if (!process.env.ANTHROPIC_API_KEY) {
+        throw new Error('Missing ANTHROPIC_API_KEY in environment variables');
+      }
+      
+      const anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+      
+      const numQuestions = 10;
+      
+      const prompt = `Based on the following content, generate exactly ${numQuestions} multiple choice quiz questions. Each question should have 4 options (A, B, C, D) with only one correct answer.
+
+Content:
+${clean}
+
+Return the quiz in this exact JSON format:
+{
+  "questions": [
+    {
+      "question": "Question text here?",
+      "options": [
+        { "id": "A", "text": "Option A text" },
+        { "id": "B", "text": "Option B text" },
+        { "id": "C", "text": "Option C text" },
+        { "id": "D", "text": "Option D text" }
+      ],
+      "correctAnswer": "A"
+    }
+  ]
+}
+
+Generate ${numQuestions} questions that test understanding of the key concepts in the content. Make sure the JSON is valid and parseable.`;
+
+      const message = await anthropic.messages.create({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 4096,
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      });
+      
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      
+      // Extract JSON from response (Claude sometimes wraps it in markdown)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Failed to parse quiz from AI response');
+      }
+      
+      const quizData = JSON.parse(jsonMatch[0]);
+      const preview = truncate(clean, 800);
+      
+      return res.status(200).json({
+        success: true,
+        textPreview: preview,
+        quiz: quizData,
+      });
+    } catch (aiError) {
+      console.error('Claude API error:', aiError);
+      // Fall back to local generation if Claude fails
+      console.log('Falling back to local quiz generation...');
+      const questions = buildVariedQuestions(clean, 6, 10);
+      const preview = truncate(clean, 800);
+      return res.status(200).json({ textPreview: preview, questions });
+    }
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Server error';
     console.error('upload error:', e);

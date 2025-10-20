@@ -13,6 +13,10 @@ const nextConfig = {
   experimental: {
     serverActionsBodySizeLimit: '12mb',
   },
+  // Make the Anthropic API key available to the server
+  env: {
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  },
   // Experimental root warning workaround:
   // The warning appears when multiple lockfiles are detected above this folder.
   // Current stable typings do not yet expose a turbopack.root option. Once available,
