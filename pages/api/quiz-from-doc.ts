@@ -176,7 +176,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).send('Method Not Allowed');
   }
   try {
+    console.log('PDF upload request received');
     const { file } = await parseMultipart(req);
+    console.log('Multipart parsing complete, file received:', { 
+      name: file.originalFilename,
+      size: file.size,
+      type: file.mimetype
+    });
+    
     const name = (file.originalFilename || '').toLowerCase();
     if (!name) return res.status(400).send('Missing filename');
     if (name.endsWith('.doc')) return res.status(415).send('Unsupported file type .doc. Use .pdf, .docx, or .txt');
@@ -189,8 +196,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('Using pdf-lib for PDF parsing...');
         const { PDFDocument } = require('pdf-lib');
         
-        // Parse the PDF
-        const pdfDoc = await PDFDocument.load(buf.buffer);
+        // Parse the PDF - use a more reliable buffer conversion
+        const pdfDoc = await PDFDocument.load(Buffer.from(buf));
         const numberOfPages = pdfDoc.getPageCount();
         
         // Fallback to pdf-parse only if needed
@@ -215,7 +222,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const pageData = await pdfParse(pageBuffer);
             extractedText += pageData.text + '\n\n';
           } catch (pageError) {
-            console.warn(`Error extracting page ${i}, skipping: ${pageError.message}`);
+            const errorMessage = pageError instanceof Error ? pageError.message : String(pageError);
+            console.warn(`Error extracting page ${i}, skipping: ${errorMessage}`);
             // Continue to next page even if this one fails
           }
         }
@@ -247,11 +255,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (fallbackError) {
-          return res.status(422).json({ 
-            error: 'Unable to parse this PDF file',
-            details: error instanceof Error ? error.message : String(error),
-            suggestion: 'Try saving your PDF with a different tool or convert it to text/docx format'
-          });
+          console.error('Both PDF parsing methods failed. Trying the simplest approach...');
+          try {
+            // Super simple approach - directly use pdf-parse without pdf-lib
+            const pdfParse = require('pdf-parse');
+            const simpleOptions = { 
+              version: 'default'
+            };
+            const data = await pdfParse(buf, simpleOptions);
+            text = data.text || '';
+            
+            if (text.trim().length > 0) {
+              console.log('Simple PDF parsing succeeded with text length:', text.length);
+            } else {
+              return res.status(422).json({ 
+                error: 'Unable to extract text from this PDF file',
+                details: error instanceof Error ? error.message : String(error),
+                suggestion: 'Try saving your PDF with a different tool or convert it to text/docx format'
+              });
+            }
+          } catch (finalError) {
+            console.error('All PDF parsing methods failed:', finalError);
+            return res.status(422).json({ 
+              error: 'Unable to parse this PDF file',
+              details: error instanceof Error ? error.message : String(error),
+              suggestion: 'Try saving your PDF with a different tool or convert it to text/docx format'
+            });
+          }
         }
       }
     } else if (name.endsWith('.docx')) {

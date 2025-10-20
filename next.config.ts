@@ -10,8 +10,16 @@ const nextConfig = {
     // Temporarily disable TypeScript checks for build to succeed
     ignoreBuildErrors: true,
   },
+  api: {
+    bodyParser: {
+      sizeLimit: '12mb',
+    },
+  },
   experimental: {
-    serverActionsBodySizeLimit: '12mb',
+    // Use a standard configuration for handling large files
+    turbopack: {
+      // Enable turbopack features
+    }
   },
   // Make the Anthropic API key available to the server
   env: {
