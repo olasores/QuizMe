@@ -40,9 +40,12 @@ const Login = () => {
             <div className="w-full max-w-md bg-white border border-black rounded-3xl shadow-xl p-8 sm:p-10 relative overflow-hidden">
                 <button
                     onClick={() => router.back()}
-                    className="absolute top-6 left-6 z-10 flex items-center"
+                    className="absolute top-6 left-6 z-10 flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black transition-colors"
                     aria-label="Go back"
                 >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
                     Back
                 </button>
                 <div className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)] [background-size:12px_12px]"></div>
