@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 
 const Login = () => {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +38,16 @@ const Login = () => {
     return (
         <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-white via-gray-100 to-gray-300 px-4 py-10">
             <div className="w-full max-w-md bg-white border border-black rounded-3xl shadow-xl p-8 sm:p-10 relative overflow-hidden">
+                <button
+                    onClick={() => router.back()}
+                    className="absolute top-6 left-6 z-10 flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black transition-colors"
+                    aria-label="Go back"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    Back
+                </button>
                 <div className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)] [background-size:12px_12px]"></div>
                 <h1 className="relative text-3xl font-extrabold text-black mb-2 tracking-tight text-center">Log In</h1>
                 <p className="relative text-center text-gray-600 mb-8 text-sm">Welcome back. Enter your details below.</p>
