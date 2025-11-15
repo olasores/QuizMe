@@ -82,10 +82,19 @@ export function QuizResults({
         });
         
         if (!response.ok) {
-          throw new Error('Failed to save quiz attempt');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save quiz attempt');
         }
         
-        setSaveStatus('success');
+        const data = await response.json();
+        
+        // Consider it a success even if the quiz wasn't saved to database
+        // (e.g., for temporary quizzes from trending topics)
+        if (data.success) {
+          setSaveStatus('success');
+        } else {
+          throw new Error('Invalid response from server');
+        }
       } catch (error) {
         console.error('Error saving quiz result:', error);
         setSaveStatus('error');
