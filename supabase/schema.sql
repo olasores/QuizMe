@@ -107,3 +107,16 @@ USING (auth.uid() = user_id OR user_id IS NULL);
 CREATE POLICY "Users can insert their own activities or public activities"
 ON activities FOR INSERT
 WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+-- Create table for tracking trending topic usage
+CREATE TABLE trending_topic_usage (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    topic TEXT NOT NULL,
+    quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
+    used_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create index for trending topics
+CREATE INDEX idx_trending_topic_usage_topic ON trending_topic_usage(topic);
+CREATE INDEX idx_trending_topic_usage_used_at ON trending_topic_usage(used_at);
