@@ -46,7 +46,7 @@ export default function DashboardPage() {
     try {
       const supabase = getBrowserSupabase();
       await supabase.auth.signOut();
-      window.location.href = '/login';
+      window.location.href = '/';
     } catch {
       // ignore
     }
