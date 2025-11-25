@@ -14,6 +14,11 @@ interface QuizResultsProps {
     id: string;
     correctAnswer: string;
   }>;
+  allQuestionsData?: Array<{
+    question: string;
+    options: Array<{ id: string; text: string }>;
+    correctAnswer: string;
+  }>;
 }
 
 export function QuizResults({ 
@@ -23,7 +28,8 @@ export function QuizResults({
   onExit,
   quizId,
   answers = {},
-  questions = []
+  questions = [],
+  allQuestionsData = []
 }: QuizResultsProps) {
   const [, setIsSaving] = useState(false); // Setter used in functions below
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -67,18 +73,31 @@ export function QuizResults({
           };
         }).filter(Boolean) as QuizAnswer[];
         
+        // Prepare the request body
+        const requestBody: Record<string, unknown> = {
+          quiz_id: quizId,
+          user_id: user?.id,
+          completed_at: new Date().toISOString(),
+          score,
+          max_score: total,
+          answers: formattedAnswers
+        };
+        
+        // If this is a temporary quiz, include the questions data so we can save them
+        if (quizId?.startsWith('temp-') && allQuestionsData.length > 0) {
+          requestBody.questions = allQuestionsData;
+          requestBody.quiz_title = 'Trending Topic Quiz';
+          requestBody.quiz_description = 'Quiz generated from trending topic';
+          requestBody.source_type = 'ai_generated';
+          requestBody.source_name = 'Trending Topic';
+          requestBody.topic = 'General';
+        }
+        
         // Save attempt to database
         const response = await fetch('/api/save-quiz-attempt', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            quiz_id: quizId,
-            user_id: user?.id,
-            completed_at: new Date().toISOString(),
-            score,
-            max_score: total,
-            answers: formattedAnswers
-          })
+          body: JSON.stringify(requestBody)
         });
         
         if (!response.ok) {
@@ -106,7 +125,7 @@ export function QuizResults({
     if (quizId) {
       saveResult();
     }
-  }, [quizId, answers, questions, score, total, saveStatus]);
+  }, [quizId, answers, questions, score, total, saveStatus, allQuestionsData]);
 
   return (
     <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
