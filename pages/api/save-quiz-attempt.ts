@@ -17,60 +17,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get Supabase client
     const supabase = createServerClient();
     
-    let quizId = attemptData.quiz_id;
+    const quizId = attemptData.quiz_id;
     
-    // If quiz_id is a temp ID (starts with 'temp-'), we need to create the quiz in database first
-    if (quizId && quizId.startsWith('temp-')) {
-      console.log('Creating quiz from temporary quiz data...');
-      
-      // Extract quiz data from the request (questions array)
-      const { questions } = attemptData;
-      
-      if (!questions || questions.length === 0) {
-        return res.status(400).json({ error: 'Quiz data is required for temporary quizzes' });
-      }
-      
-      // Create a quiz in the database
-      const { data: newQuiz, error: quizError } = await supabase
-        .from('quizzes')
-        .insert({
-          title: attemptData.quiz_title || 'Untitled Quiz',
-          description: attemptData.quiz_description || 'Quiz generated from trending topic',
-          topic: attemptData.topic || 'General',
-          source_type: attemptData.source_type || 'ai_generated',
-          source_name: attemptData.source_name || 'Trending Topic Quiz',
-          questions_count: questions.length,
-          user_id: attemptData.user_id || null
-        })
-        .select()
-        .single();
-      
-      if (quizError || !newQuiz) {
-        console.error('Error creating quiz:', quizError);
-        return res.status(500).json({ error: 'Failed to create quiz' });
-      }
-      
-      quizId = newQuiz.id;
-      
-      // Save the questions to the database
-      const questionsData = questions.map((q: { question?: string; text?: string; options?: string[]; correctAnswer?: string }, index: number) => ({
-        quiz_id: newQuiz.id,
-        text: q.question || q.text,
-        options: q.options || [],
-        correct_option_id: q.correctAnswer || 'A',
-        order: index
-      }));
-      
-      const { error: questionsError } = await supabase
-        .from('questions')
-        .insert(questionsData);
-      
-      if (questionsError) {
-        console.error('Error saving questions:', questionsError);
-        return res.status(500).json({ error: 'Failed to save quiz questions' });
-      }
-      
-      console.log('Quiz created successfully with ID:', quizId);
+    // If quiz_id is a temp ID (starts with 'temp-'), we need to skip saving to database
+    // since this is a quiz from trending topics or text input that wasn't saved yet
+    const isTempQuiz = quizId && quizId.startsWith('temp-');
+    
+    if (isTempQuiz) {
+      // For temporary quizzes, just return success without saving to database
+      // Users can still see their results, but they won't be persisted
+      console.log('Skipping database save for temporary quiz:', quizId);
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Results calculated (not saved to database)',
+        attempt: {
+          score: attemptData.score,
+          max_score: attemptData.max_score
+        }
+      });
     }
     
     if (!quizId) {

@@ -104,7 +104,7 @@ function QuizContent() {
 
   if (isComplete) {
     // Extract quiz ID if available in the URL or generate temporary one
-    const quizId = (searchParams?.get('id') || `temp-${Date.now()}`) as string;
+    const quizId = searchParams.get('id') || `temp-${Date.now()}`;
     
     return (
       <QuizResults
@@ -114,11 +114,10 @@ function QuizContent() {
         onExit={handleExit}
         quizId={quizId}
         answers={answers}
-        questions={questions.map((_, index) => ({
-          id: `q-${index}`,
-          correctAnswer: questions[index].correctAnswer
+        questions={questions.map((q, index) => ({
+          id: q.id || `q-${index}`,
+          correctAnswer: q.correctAnswer
         }))}
-        allQuestionsData={questions}
       />
     );
   }
