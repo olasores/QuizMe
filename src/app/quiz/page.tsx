@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getBrowserSupabase } from '@/lib/supabase/client';
 import { QuizProgress } from '@/components/quiz/QuizProgress';
 import { QuizQuestion, Question } from '@/components/quiz/QuizQuestion';
 import { QuizResults } from '@/components/quiz/QuizResults';
@@ -9,6 +10,7 @@ function QuizContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionIds, setQuestionIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -18,6 +20,8 @@ function QuizContent() {
 
   useEffect(() => {
     const quizData = searchParams.get('data');
+    const quizId = searchParams.get('id');
+    
     if (quizData) {
       try {
         const parsed = JSON.parse(decodeURIComponent(quizData));
@@ -27,6 +31,37 @@ function QuizContent() {
         console.error('Failed to parse quiz data:', error);
         router.push('/generate-quiz');
       }
+    } else if (quizId) {
+      // Fetch quiz questions from database
+      const fetchQuiz = async () => {
+        try {
+          const supabase = getBrowserSupabase();
+          const { data: questions, error } = await supabase
+            .from('questions')
+            .select('id, text, options, correct_option_id')
+            .eq('quiz_id', quizId)
+            .order('order', { ascending: true });
+          
+          if (error) throw error;
+          
+          // Convert database questions to Question format
+          const formattedQuestions = (questions as Array<{ id: string; text: string; options: Array<{id: string; text: string}>; correct_option_id: string }>).map((q) => ({
+            question: q.text,
+            options: q.options,
+            correctAnswer: q.correct_option_id
+          }));
+          const ids = (questions as Array<{ id: string; text: string; options: Array<{id: string; text: string}>; correct_option_id: string }>).map((q) => q.id);
+          
+          setQuestionIds(ids);
+          setQuestions(formattedQuestions);
+          setLoading(false);
+        } catch (error) {
+          console.error('Failed to fetch quiz:', error);
+          router.push('/dashboard');
+        }
+      };
+      
+      fetchQuiz();
     } else {
       router.push('/generate-quiz');
     }
@@ -104,7 +139,7 @@ function QuizContent() {
 
   if (isComplete) {
     // Extract quiz ID if available in the URL or generate temporary one
-    const quizId = searchParams.get('id') || `temp-${Date.now()}`;
+    const quizId = searchParams?.get('id') || `temp-${Date.now()}`;
     
     return (
       <QuizResults
@@ -115,7 +150,7 @@ function QuizContent() {
         quizId={quizId}
         answers={answers}
         questions={questions.map((q, index) => ({
-          id: q.id || `q-${index}`,
+          id: questionIds[index] || `q-${index}`,
           correctAnswer: q.correctAnswer
         }))}
       />
