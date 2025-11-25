@@ -10,25 +10,53 @@ const Login = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         const form = e.target as HTMLFormElement;
-        const email = (form.querySelector('#email') as HTMLInputElement).value;
+        const email = (form.querySelector('#email') as HTMLInputElement).value.trim();
         const password = (form.querySelector('#password') as HTMLInputElement).value;
+        
         setLoading(true);
         try {
             const supabase = getBrowserSupabase();
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            window.location.href = '/dashboard';
+            console.log('Attempting login with email:', email);
+            
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            console.log('Auth response - data:', data);
+            console.log('Auth response - error:', error);
+            console.log('User session:', data?.session);
+            
+            if (error) {
+                console.error('Auth error details:', {
+                  code: error.code,
+                  message: error.message,
+                  status: error.status
+                });
+                throw error;
+            }
+            
+            if (data?.session) {
+                console.log('Login successful, redirecting to dashboard');
+                window.location.href = '/dashboard';
+            } else {
+                console.warn('No session returned after login');
+                setError('Login failed: No session created');
+            }
         } catch (err: unknown) {
             let msg = 'Login failed';
-            if (err && typeof err === 'object' && 'message' in err) {
-                const m = (err as { message?: unknown }).message;
-                if (typeof m === 'string') msg = m;
+            if (err && typeof err === 'object') {
+                if ('message' in err) {
+                    const m = (err as { message?: unknown }).message;
+                    if (typeof m === 'string') msg = m;
+                }
+                if ('status' in err) {
+                    console.error('Error status:', (err as { status?: unknown }).status);
+                }
             }
+            console.error('Full login error:', err);
             setError(msg);
         } finally {
             setLoading(false);
@@ -60,25 +88,46 @@ const Login = () => {
                             type="email"
                             required
                             placeholder="you@example.com"
-                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                            className="border border-black/70 rounded-xl px-4 py-3 bg-white text-black focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
                         />
                     </div>
                     <div className="flex flex-col gap-1">
                         <label className="text-sm font-medium text-black" htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            required
-                            placeholder="••••••••"
-                            className="border border-black/70 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
-                        />
+                        <div className="relative">
+                            <input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                required
+                                placeholder="••••••••"
+                                className="w-full border border-black/70 rounded-xl px-4 py-3 bg-white text-black focus:outline-none focus:ring-2 focus:ring-black shadow-sm placeholder:text-gray-400"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black transition"
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                {showPassword ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs sm:text-sm">
-                        <label className="inline-flex items-center gap-2 select-none cursor-pointer">
-                            <input type="checkbox" className="accent-black w-4 h-4" />
-                            <span className="text-gray-600">Remember me</span>
-                        </label>
-                        <button type="button" className="text-black underline underline-offset-4 decoration-black/40 hover:decoration-black transition text-xs sm:text-sm">Forgot password?</button>
+                    <div className="flex justify-end">
+                        <button 
+                            type="button" 
+                            onClick={() => router.push('/ResetPassword')}
+                            className="text-black underline underline-offset-4 decoration-black/40 hover:decoration-black transition text-xs sm:text-sm"
+                        >
+                            Forgot password?
+                        </button>
                     </div>
                     {error && <p className="text-xs text-red-600 -mt-1">{error}</p>}
                     <button

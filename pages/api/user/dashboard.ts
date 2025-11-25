@@ -80,6 +80,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return sum + (activity.score || 0);
         }, 0);
         stats.average_score = Math.round(totalScore / activities.length);
+      } else {
+        // No quiz attempts yet, keep average as 0
+        stats.average_score = 0;
       }
     } catch (error) {
       console.error('Error fetching quiz attempts:', error);
@@ -109,28 +112,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Calculate streak (simple version)
     try {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      
-      const { data: recentActivities, error } = await supabase
-        .from('activities')
-        .select('created_at')
-        .eq('user_id', userIdFilter)
-        .order('created_at', { ascending: false })
-        .limit(30);
+      if (isUserSpecific && userIdFilter) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
         
-      if (!error && recentActivities && recentActivities.length > 0) {
-        // Check if there's activity today
-        const hasActivityToday = recentActivities.some(activity => {
-          const activityDate = new Date(activity.created_at);
-          return new Date(
-            activityDate.getFullYear(), 
-            activityDate.getMonth(), 
-            activityDate.getDate()
-          ).getTime() === today;
-        });
-        
-        stats.streak_days = hasActivityToday ? 1 : 0;
+        const { data: recentActivities, error } = await supabase
+          .from('activities')
+          .select('created_at')
+          .eq('user_id', userIdFilter)
+          .order('created_at', { ascending: false })
+          .limit(30);
+          
+        if (!error && recentActivities && recentActivities.length > 0) {
+          // Check if there's activity today
+          const hasActivityToday = recentActivities.some(activity => {
+            const activityDate = new Date(activity.created_at);
+            return new Date(
+              activityDate.getFullYear(), 
+              activityDate.getMonth(), 
+              activityDate.getDate()
+            ).getTime() === today;
+          });
+          
+          stats.streak_days = hasActivityToday ? 1 : 0;
+        }
       }
     } catch (error) {
       console.error('Error calculating streak:', error);
