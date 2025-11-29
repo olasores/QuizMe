@@ -14,12 +14,26 @@ interface Quiz {
   source_type: string;
 }
 
+interface QuizAnswerRecord {
+  question_id?: string;
+  questionId?: string;
+  selected_option_id?: string;
+  selectedOptionId?: string;
+  is_correct?: boolean;
+  isCorrect?: boolean;
+}
+
 interface QuizAttempt {
   id: string;
   score: number;
   max_score: number;
   completed_at: string;
-  answers: Array<{ questionId: string; selectedOptionId: string }>;
+  user_id?: string | null;
+  answers: QuizAnswerRecord[] | Record<string, QuizAnswerRecord> | string | null;
+}
+
+interface QuizAttemptResult extends Omit<QuizAttempt, 'answers'> {
+  answers: QuizAnswerRecord[];
 }
 
 interface Question {
@@ -36,26 +50,26 @@ export default function QuizzesPage() {
   const [filter, setFilter] = useState<'all' | 'ai_generated' | 'text' | 'document'>('all');
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [showResultsModal, setShowResultsModal] = useState(false);
-  const [quizResults, setQuizResults] = useState<{ attempt: QuizAttempt; questions: Question[] } | null>(null);
+  const [quizResults, setQuizResults] = useState<{ attempt: QuizAttemptResult; questions: Question[] } | null>(null);
   const [resultsLoading, setResultsLoading] = useState(false);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
         const supabase = getBrowserSupabase();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+
+        if (!user) {
+          setQuizzes([]);
+          return;
+        }
 
         let query = supabase
           .from('quizzes')
           .select('id, title, description, topic, questions_count, created_at, source_type')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
-
-        // Filter by user if logged in, otherwise show public quizzes
-        if (user) {
-          query = query.or(`user_id.eq.${user.id},user_id.is.null`);
-        } else {
-          query = query.is('user_id', null);
-        }
 
         // Apply source type filter
         if (filter !== 'all') {
@@ -97,6 +111,28 @@ export default function QuizzesPage() {
     }
   };
 
+  const normalizeAnswers = (rawAnswers: QuizAttempt['answers']): QuizAnswerRecord[] => {
+    if (!rawAnswers) return [];
+    if (Array.isArray(rawAnswers)) return rawAnswers;
+    if (typeof rawAnswers === 'string') {
+      try {
+        const parsed = JSON.parse(rawAnswers);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    if (typeof rawAnswers === 'object') {
+      const entries = Object.entries(rawAnswers as Record<string, QuizAnswerRecord>);
+      return entries.map(([key, value]) => ({
+        question_id: key,
+        questionId: key,
+        ...value
+      }));
+    }
+    return [];
+  };
+
   const handleViewResults = async (quiz: Quiz) => {
     setSelectedQuiz(quiz);
     setResultsLoading(true);
@@ -104,12 +140,20 @@ export default function QuizzesPage() {
 
     try {
       const supabase = getBrowserSupabase();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
 
-      // Fetch the most recent quiz attempt
+      if (!user) {
+        setQuizResults(null);
+        return;
+      }
+
+      // Fetch the most recent quiz attempt (include legacy attempts without user_id)
       const { data: attempts, error: attemptsError } = await supabase
         .from('quiz_attempts')
-        .select('id, score, max_score, completed_at, answers')
+        .select('id, score, max_score, completed_at, answers, user_id')
         .eq('quiz_id', quiz.id)
+        .or(`user_id.eq.${user.id},user_id.is.null`)
         .order('completed_at', { ascending: false })
         .limit(1);
 
@@ -136,8 +180,15 @@ export default function QuizzesPage() {
 
       if (questionsError) throw questionsError;
 
+      const normalizedAttempt: QuizAttemptResult = {
+        ...attempts[0],
+        answers: normalizeAnswers(attempts[0].answers)
+      };
+
+      console.log('Normalized answers for quiz attempt:', normalizedAttempt.answers);
+
       setQuizResults({
-        attempt: attempts[0],
+        attempt: normalizedAttempt,
         questions: questions || [],
       });
     } catch (error) {
@@ -297,18 +348,35 @@ export default function QuizzesPage() {
                   {/* Questions Review */}
                   <div className="space-y-6">
                     <h3 className="font-bold text-lg text-neutral-900">Questions Review</h3>
-                    {quizResults.questions.map((question) => {
-                      const userAnswer = quizResults.attempt.answers.find(
-                        (a: { question_id?: string; questionId?: string; selected_option_id?: string; selectedOptionId?: string }) => (a.question_id || a.questionId) === question.id
+                    {quizResults.questions.map((question, index) => {
+                      let userAnswer = quizResults.attempt.answers.find(
+                        (a) => (a.question_id || a.questionId) === question.id
                       );
                       
-                      const isCorrect = (userAnswer?.selected_option_id || userAnswer?.selectedOptionId) === question.correct_option_id;
+                      if (!userAnswer && quizResults.attempt.answers[index]) {
+                        const fallback = quizResults.attempt.answers[index];
+                        userAnswer = {
+                          ...fallback,
+                          question_id: fallback.question_id || fallback.questionId || question.id,
+                          questionId: fallback.questionId || fallback.question_id || question.id
+                        };
+                      }
+                      
+                      const selectedOptionId = userAnswer?.selected_option_id || userAnswer?.selectedOptionId;
+                      const recordedCorrectness = typeof userAnswer?.is_correct === 'boolean'
+                        ? userAnswer.is_correct
+                        : typeof userAnswer?.isCorrect === 'boolean'
+                          ? userAnswer.isCorrect
+                          : undefined;
+                      const isCorrect = recordedCorrectness ?? (selectedOptionId === question.correct_option_id);
                       const selectedOption = (question.options as Array<{id: string; text: string}>).find(
-                        opt => opt.id === (userAnswer?.selected_option_id || userAnswer?.selectedOptionId)
+                        opt => opt.id === selectedOptionId
                       );
                       const correctOption = (question.options as Array<{id: string; text: string}>).find(
                         opt => opt.id === question.correct_option_id
                       );
+                      const selectedText = selectedOption?.text || (selectedOptionId ? `Option ${selectedOptionId}` : 'No answer selected');
+                      const correctText = correctOption?.text || 'Not available';
 
                       return (
                         <div
@@ -327,16 +395,12 @@ export default function QuizzesPage() {
                           </div>
 
                           <div className="ml-8 space-y-2 text-sm">
-                            {selectedOption && (
-                              <p className={isCorrect ? 'text-green-700' : 'text-red-700'}>
-                                Your answer: <strong>{selectedOption.text}</strong>
-                              </p>
-                            )}
-                            {!isCorrect && correctOption && (
-                              <p className="text-green-700">
-                                Correct answer: <strong>{correctOption.text}</strong>
-                              </p>
-                            )}
+                            <p className={isCorrect ? 'text-green-700' : 'text-red-700'}>
+                              Your answer: <strong>{selectedText}</strong>
+                            </p>
+                            <p className="text-green-700">
+                              Correct answer: <strong>{correctText}</strong>
+                            </p>
                           </div>
                         </div>
                       );

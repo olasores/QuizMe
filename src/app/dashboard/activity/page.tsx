@@ -21,19 +21,19 @@ export default function ActivityPage() {
     const fetchActivities = async () => {
       try {
         const supabase = getBrowserSupabase();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+
+        if (!user) {
+          setActivities([]);
+          return;
+        }
 
         let query = supabase
           .from('activities')
           .select('id, activity_type, quiz_title, score, created_at')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
-
-        // Filter by user if logged in
-        if (user) {
-          query = query.or(`user_id.eq.${user.id},user_id.is.null`);
-        } else {
-          query = query.is('user_id', null);
-        }
 
         // Apply activity type filter
         if (filter !== 'all') {
