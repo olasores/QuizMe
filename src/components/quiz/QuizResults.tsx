@@ -66,6 +66,10 @@ export function QuizResults({
             is_correct: selectedAnswer === question.correctAnswer
           };
         }).filter(Boolean) as QuizAnswer[];
+
+        console.log('Questions passed to QuizResults:', questions);
+        console.log('Answers passed to QuizResults:', answers);
+        console.log('Formatted answers to save:', formattedAnswers);
         
         // Save attempt to database
         const response = await fetch('/api/save-quiz-attempt', {

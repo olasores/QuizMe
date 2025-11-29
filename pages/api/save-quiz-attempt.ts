@@ -55,6 +55,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('*')
       .single();
     
+    console.log('Saving quiz attempt with answers:', attemptData.answers);
+    console.log('Saved attempt from database:', savedAttempt);
+    
     if (error) {
       console.error('Database error saving quiz attempt:', error);
       return res.status(500).json({ error: 'Failed to save quiz attempt' });
