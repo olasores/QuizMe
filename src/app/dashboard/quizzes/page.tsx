@@ -47,7 +47,7 @@ export default function QuizzesPage() {
   const router = useRouter();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'ai_generated' | 'text' | 'document'>('all');
+  const [filter, setFilter] = useState<'all' | 'ai_generated' | 'text'>('all');
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [showResultsModal, setShowResultsModal] = useState(false);
   const [quizResults, setQuizResults] = useState<{ attempt: QuizAttemptResult; questions: Question[] } | null>(null);
@@ -218,7 +218,7 @@ export default function QuizzesPage() {
         <div className="p-6">
           {/* Filter Buttons */}
           <div className="mb-6 flex gap-2 flex-wrap">
-            {(['all', 'ai_generated', 'text', 'document'] as const).map(filterType => (
+            {(['all', 'ai_generated', 'text'] as const).map(filterType => (
               <button
                 key={filterType}
                 onClick={() => setFilter(filterType)}
@@ -228,7 +228,7 @@ export default function QuizzesPage() {
                     : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
                 }`}
               >
-                {filterType === 'all' ? 'All' : filterType === 'ai_generated' ? 'AI Generated' : filterType === 'text' ? 'Text' : 'Document'}
+                {filterType === 'all' ? 'All' : filterType === 'ai_generated' ? 'AI Generated' : 'Text'}
               </button>
             ))}
           </div>
