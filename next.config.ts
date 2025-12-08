@@ -10,27 +10,13 @@ const nextConfig = {
     // Temporarily disable TypeScript checks for build to succeed
     ignoreBuildErrors: true,
   },
-  api: {
-    bodyParser: {
-      sizeLimit: '12mb',
-    },
-  },
-  experimental: {
-    // Use a standard configuration for handling large files
-    turbopack: {
-      // Enable turbopack features
-    }
-  },
   // Make the Anthropic API key available to the server
   env: {
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   },
-  // Experimental root warning workaround:
-  // The warning appears when multiple lockfiles are detected above this folder.
-  // Current stable typings do not yet expose a turbopack.root option. Once available,
-  // you can add:
-  // experimental: { turbopack: { root: __dirname } }
-  // For now, prefer cleaning up extra lockfiles or running with `NEXT_TURBOPACK_ROOT=. ` env.
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;
